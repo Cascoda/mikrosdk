@@ -43,47 +43,46 @@
 
 #include "drv_digital_out.h"
 
-err_t digital_out_init( digital_out_t *out, pin_name_t name )
+err_t digital_out_init(digital_out_t *out, pin_name_t name)
 {
-    if ( HAL_PIN_NC == name )
-    {
-        return DIGITAL_OUT_UNSUPPORTED_PIN;
-    }
-
-    hal_gpio_configure_pin( &out->pin, name, GPIO_DIGITAL_OUTPUT );
-    return DIGITAL_OUT_SUCCESS;
+	if (HAL_PIN_NC == name)
+	{
+		return DIGITAL_OUT_UNSUPPORTED_PIN;
+	}
+	hal_gpio_configure_pin(&out->pin, name, GPIO_DIGITAL_OUTPUT);
+	return DIGITAL_OUT_SUCCESS;
 }
 
-void digital_out_high( digital_out_t *out )
+void digital_out_high(digital_out_t *out)
 {
-    if ( NULL != out->pin.base )
-    {
-        hal_gpio_set_pin_output( &out->pin );
-    }
+	if (NULL != out)
+	{
+		hal_gpio_set_pin_output(&out->pin);
+	}
 }
 
-void digital_out_low( digital_out_t *out )
+void digital_out_low(digital_out_t *out)
 {
-    if ( NULL != out->pin.base )
-    {
-        hal_gpio_clear_pin_output( &out->pin );
-    }
+	if (NULL != out)
+	{
+		hal_gpio_clear_pin_output(&out->pin);
+	}
 }
 
-void digital_out_toggle( digital_out_t *out )
+void digital_out_toggle(digital_out_t *out)
 {
-    if ( NULL != out->pin.base )
-    {
-        hal_gpio_toggle_pin_output( &out->pin );
-    }
+	if (NULL != out)
+	{
+		hal_gpio_toggle_pin_output(&out->pin);
+	}
 }
 
-void digital_out_write( digital_out_t *out, uint8_t value )
+void digital_out_write(digital_out_t *out, uint8_t value)
 {
-    if ( NULL != out->pin.base )
-    {
-        hal_gpio_write_pin_output( &out->pin, value );
-    }
+	if (NULL != out)
+	{
+		hal_gpio_write_pin_output(&out->pin, value);
+	}
 }
 
 // ------------------------------------------------------------------------- END

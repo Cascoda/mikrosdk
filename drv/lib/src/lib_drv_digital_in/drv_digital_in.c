@@ -42,24 +42,25 @@
  */
 
 #include "drv_digital_in.h"
+#include "drv_name.h"
 
-err_t digital_in_init( digital_in_t *in, pin_name_t name )
+err_t digital_in_init(digital_in_t *in, pin_name_t name)
 {
-    if ( HAL_PIN_NC == name )
-    {
-        return DIGITAL_IN_UNSUPPORTED_PIN;
-    }
+	if (HAL_PIN_NC == name)
+	{
+		return DIGITAL_IN_UNSUPPORTED_PIN;
+	}
 
-    hal_gpio_configure_pin( &in->pin, name, GPIO_DIGITAL_INPUT );
-    return DIGITAL_IN_SUCCESS;
+	hal_gpio_configure_pin(&in->pin, name, (hal_gpio_direction_t)GPIO_DIGITAL_INPUT);
+	return DIGITAL_IN_SUCCESS;
 }
 
-uint8_t digital_in_read( digital_in_t *in )
+uint8_t digital_in_read(digital_in_t *in)
 {
-    if ( NULL != in->pin.base )
-    {
-        return hal_gpio_read_pin_input( &in->pin );
-    }
+	if (NULL != in)
+	{
+		return hal_gpio_read_pin_input(&in->pin);
+	}
 }
 
 // ------------------------------------------------------------------------- END

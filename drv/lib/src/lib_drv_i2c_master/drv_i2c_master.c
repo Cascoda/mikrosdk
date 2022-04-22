@@ -45,125 +45,144 @@
 
 static i2c_master_t *_owner = NULL;
 
-static err_t _acquire( i2c_master_t *obj, bool obj_open_state )
+static err_t _acquire(i2c_master_t *obj, bool obj_open_state)
 {
-    err_t status = ACQUIRE_SUCCESS;
+	err_t status = ACQUIRE_SUCCESS;
 
-    if ( obj_open_state == true && _owner == obj )
-    {
-        return ACQUIRE_FAIL;
-    }
+	if (obj_open_state == true && _owner == obj)
+	{
+		return ACQUIRE_FAIL;
+	}
 
-    if ( _owner != obj )
-    {
-        status = hal_i2c_master_open( &obj->handle,obj_open_state );
+	if (_owner != obj)
+	{
+		status = hal_i2c_master_open(&obj->handle, obj_open_state);
 
-        if ( status != ACQUIRE_FAIL )
-        {
-            _owner = obj;
-        }
-    }
+		if (status != ACQUIRE_FAIL)
+		{
+			_owner = obj;
+		}
+	}
 
-    return status;
+	return status;
 }
 
-void i2c_master_configure_default( i2c_master_config_t *config )
+void i2c_master_configure_default(i2c_master_config_t *config)
 {
-    config->addr = 0;
+	config->addr = 0;
 
-    config->sda = 0xFFFFFFFF;
-    config->scl = 0xFFFFFFFF;
+	config->sda = 0xFFFFFFFF;
+	config->scl = 0xFFFFFFFF;
 
-    config->speed = I2C_MASTER_SPEED_STANDARD;
-    config->timeout_pass_count = 10000;
+	config->speed              = I2C_MASTER_SPEED_STANDARD;
+	config->timeout_pass_count = 10000;
 }
 
-err_t i2c_master_open( i2c_master_t *obj, i2c_master_config_t *config )
+err_t i2c_master_open(i2c_master_t *obj, i2c_master_config_t *config)
 {
-    i2c_master_config_t *p_config = &obj->config;
-    memcpy( p_config, config, sizeof( i2c_master_config_t ) );
+	i2c_master_config_t *p_config = &obj->config;
+	memcpy(p_config, config, sizeof(i2c_master_config_t));
 
-    return _acquire( obj, true );
+	return _acquire(obj, true);
 }
 
-err_t i2c_master_set_speed( i2c_master_t *obj, uint32_t speed )
+err_t i2c_master_write(i2c_master_t *obj, uint8_t *write_data_buf, size_t len_write_data)
 {
-    if( _acquire( obj, false ) != ACQUIRE_FAIL )
-    {
-        obj->config.speed = speed;
-        return hal_i2c_master_set_speed( &obj->handle, &obj->config );
-    } else {
-        return I2C_MASTER_ERROR;
-    }
+	err_t hal_status;
+
+	if (_acquire(obj, false) != ACQUIRE_FAIL)
+	{
+		return hal_i2c_master_write(obj->handle, write_data_buf, len_write_data);
+	}
+	else
+	{
+		return I2C_MASTER_ERROR;
+	}
 }
 
-err_t i2c_master_set_timeout( i2c_master_t *obj, uint16_t timeout_pass_count )
+err_t i2c_master_read(i2c_master_t *obj, uint8_t *read_data_buf, size_t len_read_data)
 {
-    if( _acquire( obj, false ) != ACQUIRE_FAIL )
-    {
-        obj->config.timeout_pass_count = timeout_pass_count;
-        hal_i2c_master_set_timeout( &obj->handle, &obj->config );
-        return I2C_MASTER_SUCCESS;
-    } else {
-        return I2C_MASTER_ERROR;
-    }
+	if (_acquire(obj, false) != ACQUIRE_FAIL)
+	{
+		return hal_i2c_master_read(obj->handle, read_data_buf, len_read_data);
+	}
+	else
+	{
+		return I2C_MASTER_ERROR;
+	}
 }
 
-err_t i2c_master_set_slave_address( i2c_master_t *obj, uint8_t address )
+err_t i2c_master_write_then_read(i2c_master_t *obj,
+                                 uint8_t *     write_data_buf,
+                                 size_t        len_write_data,
+                                 uint8_t *     read_data_buf,
+                                 size_t        len_read_data)
 {
-    if( _acquire( obj, false ) != ACQUIRE_FAIL )
-    {
-        obj->config.addr = address;
-        hal_i2c_master_set_slave_address( &obj->handle, &obj->config );
-        return I2C_MASTER_SUCCESS;
-    } else {
-        return I2C_MASTER_ERROR;
-    }
+	if (_acquire(obj, false) != ACQUIRE_FAIL)
+	{
+		return hal_i2c_master_write_then_read(
+		    obj->handle, write_data_buf, len_write_data, read_data_buf, len_read_data);
+	}
+	else
+	{
+		return I2C_MASTER_ERROR;
+	}
 }
 
-err_t i2c_master_write( i2c_master_t *obj, uint8_t *write_data_buf, size_t len_write_data )
+void i2c_master_close(i2c_master_t *obj)
 {
-    if(_acquire( obj, false ) != ACQUIRE_FAIL )
-    {
-        return hal_i2c_master_write( &obj->handle, write_data_buf, len_write_data );
-    } else {
-        return I2C_MASTER_ERROR;
-    }
+	err_t status;
+
+	status = hal_i2c_master_close(&obj->handle);
+
+	if (status == I2C_MASTER_SUCCESS)
+	{
+		obj->handle = 0;
+		_owner      = NULL;
+	}
 }
 
-err_t i2c_master_read(i2c_master_t *obj, uint8_t *read_data_buf, size_t len_read_data )
+/*---------------------Unused Functions--------------------------------*/
+
+err_t i2c_master_set_speed(i2c_master_t *obj, uint32_t speed)
 {
-    if( _acquire( obj, false ) != ACQUIRE_FAIL )
-    {
-        return hal_i2c_master_read( &obj->handle, read_data_buf, len_read_data );
-    } else {
-        return I2C_MASTER_ERROR;
-    }
+	if (_acquire(obj, false) != ACQUIRE_FAIL)
+	{
+		obj->config.speed = speed;
+		return hal_i2c_master_set_speed(&obj->handle, (hal_i2c_master_config_t *)&obj->config);
+	}
+	else
+	{
+		return I2C_MASTER_ERROR;
+	}
 }
 
-err_t i2c_master_write_then_read( i2c_master_t *obj, uint8_t *write_data_buf, size_t len_write_data,
-                                                     uint8_t *read_data_buf, size_t len_read_data )
+err_t i2c_master_set_timeout(i2c_master_t *obj, uint16_t timeout_pass_count)
 {
-    if( _acquire( obj, false ) != ACQUIRE_FAIL )
-    {
-        return hal_i2c_master_write_then_read( &obj->handle, write_data_buf, len_write_data,
-                                               read_data_buf, len_read_data );
-    } else {
-        return I2C_MASTER_ERROR;
-    }
+	if (_acquire(obj, false) != ACQUIRE_FAIL)
+	{
+		obj->config.timeout_pass_count = timeout_pass_count;
+		hal_i2c_master_set_timeout(&obj->handle, (hal_i2c_master_config_t *)&obj->config);
+		return I2C_MASTER_SUCCESS;
+	}
+	else
+	{
+		return I2C_MASTER_ERROR;
+	}
 }
 
-void i2c_master_close( i2c_master_t *obj )
+err_t i2c_master_set_slave_address(i2c_master_t *obj, uint8_t address)
 {
-    err_t status;
-
-    status = hal_i2c_master_close( &obj->handle );
-
-    if( status == I2C_MASTER_SUCCESS )
-    {
-        obj->handle = NULL;
-        _owner = NULL;
-    }
+	if (_acquire(obj, false) != ACQUIRE_FAIL)
+	{
+		obj->config.addr = address;
+		hal_i2c_master_set_slave_address(&obj->handle, (hal_i2c_master_config_t *)&obj->config);
+		return I2C_MASTER_SUCCESS;
+	}
+	else
+	{
+		return I2C_MASTER_ERROR;
+	}
 }
 
 // ------------------------------------------------------------------------- END
